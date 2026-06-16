@@ -1,57 +1,59 @@
 # Demand Forecasting & Inventory Optimization
 
-零售/快消场景下的需求预测与库存优化项目。先用时间序列方法预测各门店各商品的销量，
-再用运筹学库存模型（安全库存 / 再订货点 / EOQ / 报童模型）把预测转化为补货决策。
+Forecasts daily sales for each store-item, then converts those forecasts into
+operations-research inventory decisions (safety stock, reorder point, EOQ,
+newsvendor) for 500 store-item combinations.
 
-数据集：[Store Item Demand Forecasting Challenge](https://www.kaggle.com/c/demand-forecasting-kernels-only)
-（10 门店 × 50 商品 × 5 年日销量，约 913,000 行）
+Dataset: [Store Item Demand Forecasting Challenge](https://www.kaggle.com/c/demand-forecasting-kernels-only)
+(10 stores x 50 items x 5 years of daily sales, ~913,000 rows)
 
-## 项目结构
+## Pipeline
+
+```
+data  ->  features  ->  forecast  ->  inventory policy  ->  dashboard
+```
+
+## Project structure
 
 ```
 demand-forecast-inventory/
-├── data/
-│   ├── raw/          # 把 Kaggle 的 train.csv 放这里
-│   └── processed/    # 特征工程后的中间结果
-├── notebooks/
-│   └── 01_eda.py     # Phase 1：探索性分析
+├── data/raw/            # put Kaggle train.csv here (auto-falls back to synthetic)
+├── notebooks/01_eda.py  # Step 2: EDA (seasonal decomposition, ADF test)
 ├── src/
-│   ├── data.py       # 数据加载 + 合成数据生成
-│   ├── features.py   # Phase 2：特征工程
-│   ├── models.py     # Phase 3：预测模型 + 评估
-│   └── inventory.py  # Phase 4：库存优化（运筹学）
-├── app.py            # Phase 5：Streamlit dashboard
-├── outputs/          # EDA 图表
+│   ├── data.py          # Step 1: load real data or generate synthetic
+│   ├── features.py      # Step 3: calendar / lag / rolling features
+│   ├── models.py        # Step 4: baseline + linear regression, metrics
+│   └── inventory.py     # Step 5: safety stock / ROP / EOQ / newsvendor
+├── app.py               # Step 6: Streamlit dashboard
 └── requirements.txt
 ```
 
-## 快速开始
+## Quick start
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
-# 不需要真实数据也能跑：未找到 train.csv 时自动用合成数据
-python notebooks/01_eda.py
+python3 notebooks/01_eda.py   # exploratory analysis -> figures in outputs/
+python3 src/models.py         # forecast: compare baseline vs linear regression
+python3 src/inventory.py      # 500-row inventory policy table
+streamlit run app.py          # interactive dashboard
 ```
 
-拿到真实数据后：把 Kaggle 的 `train.csv` 放进 `data/raw/`，再次运行同一条命令即可。
+Works on synthetic data out of the box. For real data, drop the Kaggle
+`train.csv` into `data/raw/` and rerun — `load_sales()` switches automatically.
 
-### 下载真实数据
-需要 Kaggle 账号。两种方式：
-1. 网页下载 `train.csv` 手动放进 `data/raw/`
-2. Kaggle API：`kaggle competitions download -c demand-forecasting-kernels-only`
+## Key results (synthetic data)
 
-## 阶段路线图
+| Model | MAE | RMSE | SMAPE |
+|-------|-----|------|-------|
+| Seasonal Naive (baseline) | 6.91 | 8.98 | 20.5% |
+| Linear Regression | 5.30 | 6.77 | 17.1% |
 
-| Phase | 内容 | 状态 |
-|-------|------|------|
-| 1 | EDA：季节性分解、ADF 检验、周/年季节性 | ✅ 可运行 |
-| 2 | 特征工程：日历 / lag / 滚动统计 | 🚧 脚手架 |
-| 3 | 预测：seasonal naive baseline → 线性回归 → Prophet | 🚧 脚手架 |
-| 4 | 库存优化：安全库存 / ROP / EOQ / 报童模型 | ✅ 公式已实现 |
-| 5 | Streamlit dashboard | 🚧 占位 |
+Linear regression beats the baseline by ~23% on MAE.
 
-## 注意事项
-- 时间序列**按时间切分** train/test，禁止随机切分（数据泄漏）。
-- lag / rolling 特征必须按 `(store, item)` 分组，且 rolling 前先 `shift(1)`。
-# demand-forecast-inventory
+## Notes / design decisions
+- Time-based train/test split (never random — that leaks the future).
+- Lag/rolling features computed within each (store, item) group.
+- Rolling features shifted by 1 to exclude the current day (no leakage).
+- Safety stock uses the std of forecast ERROR, so a better model directly
+  lowers required inventory.

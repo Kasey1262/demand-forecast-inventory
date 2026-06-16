@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# 数据文件不入库（体积大）
+data/raw/*.csv
+data/processed/*.csv
+data/processed/*.parquet
+
+# 输出图保留 .gitkeep，忽略生成的图（可选）
+# outputs/*.png

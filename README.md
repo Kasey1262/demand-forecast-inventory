@@ -44,10 +44,8 @@ Works on synthetic data out of the box. For real data, drop the Kaggle
 
 ## Key results (synthetic data)
 
-| Model | MAE | RMSE | SMAPE |
-|-------|-----|------|-------|
-| Seasonal Naive (baseline) | 6.91 | 8.98 | 20.5% |
-| Linear Regression | 5.30 | 6.77 | 17.1% |
+| Seasonal Naive (baseline) | 9.076 | 12.051 | 18.56% |
+| Linear Regression         | 6.996 |  9.167 | 14.82% |
 
 Linear regression beats the baseline by ~23% on MAE.
 

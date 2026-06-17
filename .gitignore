@@ -11,3 +11,5 @@ data/processed/*.parquet
 
 # 输出图保留 .gitkeep，忽略生成的图（可选）
 # outputs/*.png
+.DS_Store
+.DS_Store

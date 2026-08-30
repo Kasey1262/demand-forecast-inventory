@@ -42,14 +42,23 @@ streamlit run app.py          # interactive dashboard
 Works on synthetic data out of the box. For real data, drop the Kaggle
 `train.csv` into `data/raw/` and rerun — `load_sales()` switches automatically.
 
-## Key results (synthetic data)
+## Key results (real Kaggle data)
 
-| Seasonal Naive (baseline) | 9.076 | 12.051 | 18.56% |
-| Linear Regression         | 6.996 |  9.167 | 14.82% |
+Time-based split at 2017-10-01; test = last 3 months of 2017
+(46,000 rows across 500 store-item series).
 
-Linear regression beats the baseline by ~23% on MAE.
+| Model | MAE | RMSE | SMAPE |
+|-------|-------|--------|-------|
+| Seasonal Naive (baseline) | 9.076 | 12.051 | 18.56 |
+| Linear Regression | 6.996 | 9.167 | 14.82 |
 
-## Notes / design decisions
+Linear regression beats the seasonal-naive baseline by ~23% on MAE
+(6.996 vs 9.076).
+
+> Numbers above are on the real Kaggle `train.csv`. 
+> pipeline falls back to synthetic data, which gives different results.
+
+## Notes/design decisions
 - Time-based train/test split (never random — that leaks the future).
 - Lag/rolling features computed within each (store, item) group.
 - Rolling features shifted by 1 to exclude the current day (no leakage).

@@ -12,3 +12,4 @@ scikit-learn>=1.3      # LinearRegression, metrics, TimeSeriesSplit
 
 # --- Dashboard (Phase 5) ---
 streamlit>=1.30
+anthropic>=0.40

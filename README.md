@@ -58,6 +58,23 @@ Linear regression beats the seasonal-naive baseline by ~23% on MAE
 > Numbers above are on the real Kaggle `train.csv`. 
 > pipeline falls back to synthetic data, which gives different results.
 
+## AI Agent (natural-language interface)
+
+An LLM agent (Claude, via tool use/function calling) that operates the
+forecasting pipeline through conversation. The model decides which tool to
+call and with what arguments — it is not a fixed script.
+
+Three tools wrap the pipeline's real functions:
+
+| Tool | What it does |
+|------|--------------|
+| `get_forecast` | Forecasted average daily demand + error std for a store-item |
+| `get_inventory_policy` | Safety stock / reorder point / EOQ / newsvendor qty at a chosen service level |
+| `check_stockout_risk` | Probability that demand exceeds current stock over a horizon |
+
+The model is trained once at startup and held in memory, so tools answer
+instantly. Example session:
+
 ## Notes/design decisions
 - Time-based train/test split (never random — that leaks the future).
 - Lag/rolling features computed within each (store, item) group.

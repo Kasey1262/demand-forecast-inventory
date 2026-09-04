@@ -75,6 +75,21 @@ Three tools wrap the pipeline's real functions:
 The model is trained once at startup and held in memory, so tools answer
 instantly. Example session:
 
+you > Store 2, item 10 has 200 units left. What's the stockout risk this week?
+[tool] check_stockout_risk({'store': 2, 'item': 10, 'current_stock': 200, 'days': 7})
+agent > High alert — Store 2, Item 10 is at serious risk of stocking out this week.
+Expected demand (7 days): ~699 units. Current stock: 200 units.
+Stockout probability: ~100%. You're covering about 2 days of demand —
+Reorder immediately.
+
+Run it:
+
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...
+python3 agent/agent.py
+```
+
 ## Notes/design decisions
 - Time-based train/test split (never random — that leaks the future).
 - Lag/rolling features computed within each (store, item) group.

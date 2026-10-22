@@ -15,7 +15,9 @@ import os
 import numpy as np
 import pandas as pd
 
-RAW_PATH = os.path.join("data", "raw", "train.csv")
+# Resolved from this file, not the working directory, so callers launched from
+# elsewhere (e.g. an MCP client) still find the real data.
+RAW_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "raw", "train.csv")
 
 
 def generate_synthetic_sales(

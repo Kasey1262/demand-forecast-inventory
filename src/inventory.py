@@ -36,6 +36,38 @@ def reorder_point(avg_daily_demand: float, lead_time: float,
     return avg_daily_demand * lead_time + safety_stock(error_std, lead_time, service_level)
 
 
+def undershoot_moments(daily_demand) -> tuple[float, float]:
+    """
+    Mean and variance of the UNDERSHOOT: how far below s the inventory position
+    already is when a reorder is triggered.
+
+    The ROP formula assumes we reorder at exactly s. With daily demand arriving
+    in big chunks (~50 units/day here), the position typically jumps past s, so
+    we order with less stock than planned. Renewal theory gives, for daily
+    demand D:
+        E[U]   = E[D^2] / (2 E[D])
+        Var[U] = E[D^3] / (3 E[D]) - E[U]^2
+    """
+    d = np.asarray(daily_demand, dtype=float)
+    m1 = d.mean()
+    if m1 <= 0:
+        return 0.0, 0.0
+    mean_u = (d ** 2).mean() / (2 * m1)
+    var_u = max((d ** 3).mean() / (3 * m1) - mean_u ** 2, 0.0)
+    return float(mean_u), float(var_u)
+
+
+def reorder_point_with_undershoot(lead_time_demand: float, lead_time_std: float,
+                                  daily_demand, service_level: float = 0.95) -> float:
+    """
+    ROP that still hits the target cycle service level when daily demand
+    overshoots s:   s = LTD + E[U] + z * sqrt(sigma_L^2 + Var[U])
+    """
+    mean_u, var_u = undershoot_moments(daily_demand)
+    z = norm.ppf(service_level)
+    return lead_time_demand + mean_u + z * math.sqrt(lead_time_std ** 2 + var_u)
+
+
 def eoq(annual_demand: float, order_cost: float, holding_cost: float) -> float:
     """EOQ = sqrt(2 * D * S / H).  The cost-minimising order quantity."""
     return math.sqrt(2 * annual_demand * order_cost / holding_cost)
